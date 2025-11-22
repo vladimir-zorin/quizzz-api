@@ -33,11 +33,8 @@ var app = builder.Build();
 app.UseCors(corsPolicyName); // before authorization, swagger and MapControllers!
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
