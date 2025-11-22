@@ -1,6 +1,7 @@
 using Quizzz.Api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddApplicationInsightsTelemetry();
 
 // Add CORS policy before controllers!
 var corsPolicyName = "AllowQuizzzFrontEnd";
