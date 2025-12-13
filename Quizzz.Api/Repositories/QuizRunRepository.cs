@@ -30,7 +30,7 @@ public class QuizRunRepository : IQuizRunRepository
         return currId;
     }
 
-    public void AddParticipant(Participant participant, long quizRunId)
+    public List<Participant> AddParticipant(Participant participant, long quizRunId)
     {
         var quizRun = GetQuizRun(quizRunId);
         if (quizRun == null)
@@ -44,6 +44,7 @@ public class QuizRunRepository : IQuizRunRepository
         }
 
         quizRun.Participants.Add(participant);
+        return quizRun.Participants;
     }
 
     private long GetCurrentQuizRunId()
@@ -75,5 +76,5 @@ public interface IQuizRunRepository
 {
     QuizRun? GetQuizRun(long id);
     long SaveQuizRun(QuizRun quizRun);
-    void AddParticipant(Participant participant, long quizRunId);
+    List<Participant> AddParticipant(Participant participant, long quizRunId);
 }

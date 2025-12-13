@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Quizzz.Api.Hubs;
 using Quizzz.Api.Models;
 using Quizzz.Api.Repositories;
 
@@ -10,11 +12,14 @@ namespace Quizzz.Api.Controllers
     {
         private readonly IQuizRepository _quizRepository;
         private readonly IQuizRunRepository _quizRunRepository;
+        private readonly IHubContext<QuizRunHub> _hubContext;
 
         public QuizRunController(
+            IHubContext<QuizRunHub> hubContext,
             IQuizRepository quizRepository,
             IQuizRunRepository quizRunRepository)
         {
+            _hubContext = hubContext;
             _quizRepository = quizRepository;
             _quizRunRepository = quizRunRepository;
         }
@@ -22,8 +27,8 @@ namespace Quizzz.Api.Controllers
         /// <summary>
         /// Create a new quizrun
         /// </summary>
-        [HttpPost("quiz/{quizId}")]
-        public ActionResult<long> StartQuizRun(
+        [HttpPost("quiz/{quizId}/start")]
+        public async Task<ActionResult<long>> StartQuizRun(
             [FromRoute] long quizId)
         {
             var quizRun = new QuizRun
@@ -32,6 +37,11 @@ namespace Quizzz.Api.Controllers
             };
 
             var quizRunId = _quizRunRepository.SaveQuizRun(quizRun);
+            var groupName = QuizRunHub.GetQuizRunGroupName(quizRunId);
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync("QuizStarted", new { quizRunId });
+
             return Ok(quizRunId);
         }
 
@@ -55,12 +65,17 @@ namespace Quizzz.Api.Controllers
         /// Add participant to quizrun with given id
         /// </summary>
         [HttpPost("participant/{quizRunId}")]
-        public ActionResult AddParticipant(
+        public async Task<ActionResult> AddParticipant(
             [FromRoute] long quizRunId,
             [FromBody] Participant participant)
         {
-            _quizRunRepository.AddParticipant(participant, quizRunId);
-            return Ok();
+            var participants = _quizRunRepository.AddParticipant(participant, quizRunId);
+            var groupName = QuizRunHub.GetQuizRunGroupName(quizRunId);
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync("ParticipantJoined", participants);
+
+            return Ok(participant);
         }
 
         /// <summary>
