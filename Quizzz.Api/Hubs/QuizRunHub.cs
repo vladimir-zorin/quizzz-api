@@ -19,38 +19,6 @@ public class QuizRunHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
     }
 
-    ////public async Task JoinQuizRun(int quizRunId, string participantName)
-    ////{
-    ////    var groupName = GetQuizRunGroupName(quizRunId);
-    ////    var participant = new Models.Participant
-    ////    {
-    ////        Name = participantName
-    ////    };
-
-    ////    var allParticipants = _quizRunRepository.AddParticipant(participant, quizRunId);
-
-    ////    await Clients.Group(groupName).SendAsync("ParticipantJoined", allParticipants);
-    ////}
-
-    ////public async Task StartQuiz(int quizRunId)
-    ////{
-    ////    var groupName = GetQuizRunGroupName(quizRunId);
-    ////    await Clients.Group(groupName).SendAsync("QuizStarted", new
-    ////    {
-    ////        startedAt = DateTime.UtcNow
-    ////    });
-    ////}
-
-    ////public async Task AdvanceQuestion(int quizRunId, int nextQuestionId)
-    ////{
-    ////    var groupName = GetQuizRunGroupName(quizRunId);
-    ////    await Clients.Group(groupName).SendAsync("QuestionAdvanced", new
-    ////    {
-    ////        questionId = nextQuestionId,
-    ////        advancedAt = DateTime.UtcNow
-    ////    });
-    ////}
-
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         // Clean up connections

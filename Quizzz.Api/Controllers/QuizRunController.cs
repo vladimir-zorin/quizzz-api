@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Quizzz.Api.Hubs;
+using Quizzz.Api.Mappers;
 using Quizzz.Api.Models;
 using Quizzz.Api.Repositories;
 
@@ -27,8 +28,8 @@ namespace Quizzz.Api.Controllers
         /// <summary>
         /// Create a new quizrun
         /// </summary>
-        [HttpPost("quiz/{quizId}/start")]
-        public async Task<ActionResult<long>> StartQuizRun(
+        [HttpPost("quiz/{quizId}/create")]
+        public async Task<ActionResult<long>> CreateQuizRun(
             [FromRoute] long quizId)
         {
             var quizRun = new QuizRun
@@ -37,12 +38,37 @@ namespace Quizzz.Api.Controllers
             };
 
             var quizRunId = _quizRunRepository.SaveQuizRun(quizRun);
+
+            return Ok(quizRunId);
+        }
+
+        /// <summary>
+        /// Start quiz
+        /// </summary>
+        [HttpPost("{quizRunId}/start")]
+        public async Task<ActionResult<long>> StartQuizRun(
+            [FromRoute] long quizRunId)
+        {
+            var quizRun = _quizRunRepository.GetQuizRun(quizRunId);
+            if (quizRun == null)
+            {
+                return NotFound("Cannot find quizrun");
+            }
+
+            var quiz = _quizRepository.GetQuizById(quizRun.QuizId);
+            if (quiz == null)
+            {
+                return NotFound("Cannot find quiz for quizrun");
+            }
+
+            quizRun.CurrentQuestionId = quiz.Questions.First().QuestionId;
+            var quizRunVm = quizRun.ToViewModel();
             var groupName = QuizRunHub.GetQuizRunGroupName(quizRunId);
             await _hubContext.Clients
                 .Group(groupName)
-                .SendAsync("QuizStarted", new { quizRunId });
+                .SendAsync("QuizStarted", quizRunVm);
 
-            return Ok(quizRunId);
+            return Ok(quizRunVm);
         }
 
         /// <summary>
@@ -76,6 +102,26 @@ namespace Quizzz.Api.Controllers
                 .SendAsync("ParticipantJoined", participants);
 
             return Ok(participant);
+        }
+
+        /// <summary>
+        /// Get participants without given answers
+        /// </summary>
+        [HttpGet("participants/{quizRunId}")]
+        [ProducesResponseType(typeof(ParticipantListItem[]), 200)]
+        public async Task<ActionResult<ParticipantListItem[]>> GetParticipants([FromRoute] long quizRunId)
+        {
+            var quizRun = _quizRunRepository.GetQuizRun(quizRunId);
+            if (quizRun == null)
+            {
+                return NotFound("Cannot find quizrun");
+            }
+
+            var participants = quizRun.Participants
+                .Select(p => p.ToListItem())
+                .ToArray();
+
+            return Ok(participants);
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ public class QuizRun
 {
     public long QuizRunId { get; set; }
     public long QuizId { get; set; }
+    public long? CurrentQuestionId { get; set; }
     public List<Participant> Participants { get; set; } = new List<Participant>();
 }
 
